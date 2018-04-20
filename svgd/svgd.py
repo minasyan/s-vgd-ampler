@@ -5,8 +5,14 @@ import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde, norm
 
 # ## debugging
-# def numpy_p(x):
-#     return 1/3 * norm.pdf(x, -2, 1) + 2/3 * norm.pdf(x, 2, 1)
+def numpy_p(x):
+    return 1/3 * norm.pdf(x, -2, 1) + 2/3 * norm.pdf(x, 2, 1)
+
+def numpy_p_far(x):
+    return 1/2 * norm.pdf(x, -10, 1) + 1/2 * norm.pdf(x, 10, 1)
+
+def numpy_p_complex(x):
+    return (1/7) * norm.pdf(x, -2,3) + (2/7)  * norm.pdf(x, 2,1) + (3/7)  * norm.pdf(x, 5,5) + (1/7)  * norm.pdf(x, 6,0.5)
 
 '''
 Runs T number of iterations of Stein Variational
@@ -28,29 +34,31 @@ def svgd(p, kern, x, T, alpha=0.9, fudge=1e-6, step=1e-1):
     assert len(x.shape) == 2
     n, d = x.shape
     x = torch.Tensor(x)
+    ## Put the most likely x at the front of the array (leading gradient).
+    x = put_max_first(x, p)
     accumulated_grad = torch.zeros((n, d))
-
     for i in range(T):
         ### debugging
-        # print(i)
-        # print(torch.mean(x))
-        # if i == 0 or i == 50 or i == 75 or i == 100 or i == 150:
-        #     xs = np.arange(-10, 10, 0.01)
-        #     plt.plot(xs, numpy_p(xs), 'r-')
-        #     g = gaussian_kde(x.numpy().reshape(-1))
-        #     plt.plot(xs, g(xs), 'g')
-        #     plt.show()
-
+        print(i)
+        if i % 50 == 0 or i == T-1:
+            plt.figure()
+            xs = np.arange(-20, 20, 0.01)
+            plt.plot(xs, numpy_p_complex(xs), 'r-')
+            g = gaussian_kde(x.numpy().reshape(-1))
+            plt.plot(xs, g(xs), 'g')
+            plt.savefig('../../../nparticles/{}.png'.format(i))
         varx = Variable(x, requires_grad = True)
         grad_logp = grad_log(p, varx)
         kernel, grad_kernel = kern(x)
         phi = torch.matmul(kernel, grad_logp)/n + torch.mean(grad_kernel, dim=1).view(n, d)
+        # print(grad_logp)
         if i == 0:
             accumulated_grad += phi**2
         else:
             accumulated_grad = alpha * accumulated_grad + (1-alpha) * phi**2
         stepsize = fudge + torch.sqrt(accumulated_grad)
         x = x + torch.div(step * phi, stepsize)
+        # break
     return x
 
 '''
@@ -106,8 +114,14 @@ def grad_log(p, x):
     n, d = tuple(x.size())
     grad_log = []
     for i in range(len(x)):
+        if float(p(x[i])) < 1e-35:
+            grad_log.append(grad_log[-1])
+            continue
+        # print ("p(x) is {}".format(p(x[i])))
         logp = torch.log(p(x[i]))
+        # print ("logp us {}".format(logp))
         logp.backward()
+        # print ("the grad is {}".format(x.grad.data[i]))
         grad_log.append(x.grad.data[i])
     grad_log = np.array(grad_log).reshape((n, d))
     return torch.Tensor(grad_log)
@@ -136,3 +150,24 @@ def k_matrix(k, k_grad, x):
             grad_kernel_matrix[-1].append(float(kernel_grad))
             #x.grad.data.zero_()
     return torch.Tensor(kernel_matrix), torch.Tensor(grad_kernel_matrix)
+
+'''
+Returns the same array with the element with highest probability first.
+
+Input: x - array of samples
+       p - probability distribution
+Ourput: arrays of samples with highest probability element first.
+'''
+def put_max_first(x, p):
+    n = len(x)
+    best_index = -1
+    best_prob = -1
+    for i in range(n):
+        prob_i = p(x[i])
+        if float(prob_i) > float(best_prob):
+            best_prob = prob_i
+            best_index = i
+    tmp = x[0]
+    x[0] = x[best_index]
+    x[best_index] = tmp
+    return x
