@@ -30,13 +30,14 @@ Input: p - target density
 
 Output: final set of points after T iterations.
 '''
-def svgd(p, kern, x, T, alpha=0.9, fudge=1e-6, step=1e-1):
+def svgd(p, kern, x, T, alpha=0.9, step=1e-1):
     assert len(x.shape) == 2
     n, d = x.shape
     x = torch.Tensor(x)
     ## Put the most likely x at the front of the array (leading gradient).
     x = put_max_first(x, p)
     accumulated_grad = torch.zeros((n, d))
+    fudge=1e-6
     for i in range(T):
         ### debugging
         print(i)
