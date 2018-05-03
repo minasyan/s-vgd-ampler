@@ -16,7 +16,7 @@ def numpy_p_complex(x):
 
 '''
 Runs T number of iterations of Stein Variational
-Descent to move the given initial parrticles in the
+Descent to move the given initial parrticles in thegr
 direction of the target desnity p. The step sizes
 are determined by AdaGrad.
 
