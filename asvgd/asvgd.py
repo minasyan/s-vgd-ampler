@@ -1,6 +1,10 @@
+import sys
+sys.path.append('../')
 import torch
 from torch.autograd import Variable
-from svgd.svgd import RBF_kernel, grad_log
+from svgd.svgd import grad_log
+
+
 
 '''
 Amortized SVGD that performs T iterations of SVGD steps on a parameterized
@@ -10,7 +14,7 @@ Input: 	p - target density
 		f - neural network
 		q - initial sampling distribution
 		kern - kernel function returning kernel and grad_kernel matrices
-		params - the parameters of f to be updated
+		params - the parameters of f to be updated given as a flat 1D tensor
 		T - number of iterations
 		m - batch size
 
@@ -19,11 +23,12 @@ Output: params - final values of parameters
 def asvgd(p, f, q, kern, params, T, m, alpha=0.9, step=1e-1):
 	dparam = params.size()[0]
 	accumulated_grad = torch.zeros(params.size())
+	fudge = 1e-6
 	for t in range(T):
 		inputs = q(m)	# m x p
 		zs = f(inputs, params)	# m x d
 		d = zs.size()[1]
-		varz = Variable(zs, required_grad = True)
+		varz = Variable(zs, requires_grad = True)
 		grad_logp = grad_log(p, varz)	# m x d
 		kernel, grad_kernel = kern(zs)	# (m x m), (m x m x d)
 		phi = torch.matmul(kernel, grad_logp)/m + torch.mean(grad_kernel, dim=1).view(m, d)	# m x d

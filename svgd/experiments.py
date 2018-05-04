@@ -22,20 +22,21 @@ def SimpleTwoDim(x):
     #return torch.exp()
 
 
-x = np.random.normal(0, 1, 500).reshape((-1, 1))
+if __name__ == '__main__':
+    x = np.random.normal(0, 1, 500).reshape((-1, 1))
 
 
-result = svgd.svgd(OneDimNormalMixtureComplex, svgd.RBF_kernel, x, 1000)
-# print ("The variance is {}".format(np.var(result.numpy().reshape(-1))))
-usable_res = result.numpy().reshape(-1)
-left_res = []
-right_res = []
-for val in usable_res:
-    if val < 0:
-        left_res.append(val)
-    else:
-        right_res.append(val)
-print("The Variances are {} for left and {} for right".format(np.var(left_res), np.var(right_res)))
+    result = svgd.svgd(OneDimNormalMixtureComplex, svgd.RBF_kernel, x, 1000)
+    # print ("The variance is {}".format(np.var(result.numpy().reshape(-1))))
+    usable_res = result.numpy().reshape(-1)
+    left_res = []
+    right_res = []
+    for val in usable_res:
+        if val < 0:
+            left_res.append(val)
+        else:
+            right_res.append(val)
+    print("The Variances are {} for left and {} for right".format(np.var(left_res), np.var(right_res)))
 
 
 # g = gaussian_kde(result.numpy().reshape(-1))
