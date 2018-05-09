@@ -169,7 +169,7 @@ Returns the same array with the element with highest probability first.
 
 Input: x - array of samples
        p - probability distribution
-Ourput: arrays of samples with highest probability element first.
+Output: arrays of samples with highest probability element first.
 '''
 def put_max_first(x, p):
     n = len(x)
@@ -186,20 +186,12 @@ def put_max_first(x, p):
     return x
 
 
-def twoDimPlotter(x, target):
-    n = x.shape[0]
-    dim1, dim2 = x.numpy()[:,0], x.numpy()[:,1]
-    target1, target2 = target.numpy()[:,0], target.numpy()[:,1]
+'''
+Plots a scatter plot of two dimensional target samples and particules.
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.scatter(dim1, dim2, s=10, c='b', marker="x", label='particles')
-    ax.scatter(target1, target2, s=10, c='r', marker="o", label='target')
-    plt.legend(loc='upper right');
-    plt.xlim((-5,10))
-    plt.ylim((-5,10))
-    plt.show()
-
+Input: x - particules
+       target - target distribution to sample from
+'''
 def bigDimPlotter(x, target):
     n = x.shape[0]
     dim1, dim2 = x.numpy()[:,0], x.numpy()[:,1]

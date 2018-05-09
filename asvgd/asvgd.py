@@ -6,6 +6,7 @@ from torch.autograd import Variable
 from svgd.svgd import grad_log, put_max_first
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 '''
 Amortized SVGD that performs T iterations of SVGD steps on a parameterized
@@ -26,13 +27,13 @@ def asvgd(p, f, q, kern, params, T, m, alpha=0.9, step=1e-1):
 	accumulated_grad = torch.zeros(params.size())
 	fudge = 1e-6
 
-	for t in range(T):
+	for t in tqdm(range(T)):
 		print("iteration: {}".format(t))
 		inputs = q(m)	# m x p
 		zs = f(inputs, params)	# m x d
 		print("mean is: {}".format(torch.mean(zs)))
 		d = zs.size()[1]
-		if t % 50 == 0:
+		if t % 50 == 0 or t == T-1:
 			g = gaussian_kde(zs.numpy().reshape(-1))
 			xs = np.arange(-20, 20, 0.01)
 			plt.plot(xs, g(xs), 'g')
