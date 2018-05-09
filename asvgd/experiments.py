@@ -4,11 +4,11 @@ import torch
 import torch.nn.functional as F
 from torch.distributions.normal import Normal
 import numpy as np
-from svgd.experiments import OneDimNormalMixture
+from svgd.experiments import OneDimNormalMixture, OneDimNormalMixtureFar, OneDimNormalMixtureComplex
 from svgd.svgd import RBF_kernel
 from asvgd import asvgd
-
-
+from scipy.stats import gaussian_kde
+import matplotlib.pyplot as plt
 
 def nn(nin, nhidden1, nhidden2, nout, params):
 	nweights1 = nin * nhidden1
@@ -26,8 +26,8 @@ def nn(nin, nhidden1, nhidden2, nout, params):
 	return f
 
 if __name__ == '__main__':
-	nin, nhidden1, nhidden2, nout = 10, 20, 10, 1
-	T = 100
+	nin, nhidden1, nhidden2, nout = 1, 5, 5, 1
+	T = 1000
 	m = 100
 	def q(m):
 		dist = Normal(0, 1)
@@ -36,5 +36,9 @@ if __name__ == '__main__':
 	params = Normal(0, 1).sample(torch.Size([nparams]))
 	f = nn(nin, nhidden1, nhidden2, nout, params)
 	result_params = asvgd(OneDimNormalMixture, f, q, RBF_kernel, params, T, m)
-	result = f(q(m), result_params)
+	result = f(q(m*m), result_params)
+	g = gaussian_kde(result.numpy().reshape(-1))
+	xs = np.arange(-20, 20, 0.01)
+	plt.plot(xs, g(xs), 'g')
+	plt.show()
 	print(torch.mean(result))
