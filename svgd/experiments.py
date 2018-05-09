@@ -55,13 +55,13 @@ def generate100Dim(mean, covariance):
 #plt.show()
 
 if __name__=='__main__':
-    dimension = 10
-    nparticles = 100
+    dimension = 1
+    nparticles = 200
     x = np.random.normal(0, 1, nparticles * dimension).reshape((-1, dimension))
 
     ## TODO: only for 100DIM example
-    mean = torch.Tensor([0]*10)
-    covariance = torch.Tensor(datasets.make_spd_matrix(10))
+    mean = torch.Tensor([2.5]*dimension)
+    covariance = torch.Tensor(datasets.make_spd_matrix(dimension))
 
     start_time = time.time()
     result = svgd.svgd(generate100Dim(mean, covariance), svgd.RBF_kernel, x, 100, mean=mean, covariance=covariance)

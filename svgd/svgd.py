@@ -44,13 +44,13 @@ def svgd(p, kern, x, T, alpha=0.9, fudge=1e-6, step=1e-1, mean=None, covariance=
     ## Put the most likely x at the front of the array (leading gradient).
     x = put_max_first(x, p)
     accumulated_grad = torch.zeros((n, d))
+    # gauss = multivariate_normal.MultivariateNormal(mean, covariance)
+    # target = gauss.sample(torch.Size([n]))
     for i in tqdm(range(T)):
         ### debugging
-        # gauss = multivariate_normal.MultivariateNormal(mean, covariance)
-        # target = gauss.sample(torch.Size([n]))
         if i % 50 == 0 or i == T-1:
             pass
-            ## TODO: Change mean and varince here.
+            # TODO: Change mean and varince here.
             # twoDimPlotter(x, target)
             # bigDimPlotter(x,target)
 
