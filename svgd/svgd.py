@@ -3,6 +3,8 @@ import torch
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde, norm
+from torch.distributions import multivariate_normal
+from tqdm import tqdm
 
 # ## debugging
 def numpy_p(x):
@@ -14,9 +16,14 @@ def numpy_p_far(x):
 def numpy_p_complex(x):
     return (1/7) * norm.pdf(x, -2,3) + (2/7)  * norm.pdf(x, 2,1) + (3/7)  * norm.pdf(x, 5,5) + (1/7)  * norm.pdf(x, 6,0.5)
 
+def numpy_multi(x):
+    mean = torch.Tensor([0, 0])
+    covariance = torch.tensor([[5, 2], [2, 1]])
+    return norm.pdf(x, mean, covariance)
+
 '''
 Runs T number of iterations of Stein Variational
-Descent to move the given initial parrticles in thegr
+Descent to move the given initial parrticles in the
 direction of the target desnity p. The step sizes
 are determined by AdaGrad.
 
@@ -30,23 +37,29 @@ Input: p - target density
 
 Output: final set of points after T iterations.
 '''
-def svgd(p, kern, x, T, alpha=0.9, fudge=1e-6, step=1e-1):
+def svgd(p, kern, x, T, alpha=0.9, fudge=1e-6, step=1e-1, mean=None, covariance=None):
     assert len(x.shape) == 2
     n, d = x.shape
     x = torch.Tensor(x)
     ## Put the most likely x at the front of the array (leading gradient).
     x = put_max_first(x, p)
     accumulated_grad = torch.zeros((n, d))
-    for i in range(T):
+    for i in tqdm(range(T)):
         ### debugging
-        print(i)
+        # gauss = multivariate_normal.MultivariateNormal(mean, covariance)
+        # target = gauss.sample(torch.Size([n]))
         if i % 50 == 0 or i == T-1:
-            plt.figure()
-            xs = np.arange(-20, 20, 0.01)
-            plt.plot(xs, numpy_p_complex(xs), 'r-')
-            g = gaussian_kde(x.numpy().reshape(-1))
-            plt.plot(xs, g(xs), 'g')
-            plt.savefig('../../../nparticles/{}.png'.format(i))
+            pass
+            ## TODO: Change mean and varince here.
+            # twoDimPlotter(x, target)
+            # bigDimPlotter(x,target)
+
+        #     plt.figure()
+        #     xs = np.arange(-20, 20, 0.01)
+        #     plt.plot(xs, numpy_multi(xs), 'r-')
+        #     g = gaussian_kde(x.numpy().reshape(-1))
+        #     plt.plot(xs, g(xs), 'g')
+        #     plt.savefig('../../../nparticles/{}.png'.format(i))
         varx = Variable(x, requires_grad = True)
         grad_logp = grad_log(p, varx)
         kernel, grad_kernel = kern(x)
@@ -122,7 +135,7 @@ def grad_log(p, x):
         # print ("logp us {}".format(logp))
         logp.backward()
         # print ("the grad is {}".format(x.grad.data[i]))
-        grad_log.append(x.grad.data[i])
+        grad_log.append(x.grad.data[i].numpy())
     grad_log = np.array(grad_log).reshape((n, d))
     return torch.Tensor(grad_log)
 
@@ -171,3 +184,32 @@ def put_max_first(x, p):
     x[0] = x[best_index]
     x[best_index] = tmp
     return x
+
+
+def twoDimPlotter(x, target):
+    n = x.shape[0]
+    dim1, dim2 = x.numpy()[:,0], x.numpy()[:,1]
+    target1, target2 = target.numpy()[:,0], target.numpy()[:,1]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(dim1, dim2, s=10, c='b', marker="x", label='particles')
+    ax.scatter(target1, target2, s=10, c='r', marker="o", label='target')
+    plt.legend(loc='upper right');
+    plt.xlim((-5,10))
+    plt.ylim((-5,10))
+    plt.show()
+
+def bigDimPlotter(x, target):
+    n = x.shape[0]
+    dim1, dim2 = x.numpy()[:,0], x.numpy()[:,1]
+    target1, target2 = target.numpy()[:,0], target.numpy()[:,1]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(dim1, dim2, s=10, c='b', marker="x", label='particles')
+    ax.scatter(target1, target2, s=10, c='r', marker="o", label='target')
+    plt.legend(loc='upper right');
+    plt.xlim((-5,10))
+    plt.ylim((-5,10))
+    plt.show()
