@@ -47,7 +47,7 @@ def hmc_transform(U, L, eps, current_q):
 A neural network imitating an HMC sampler.
 
 Input:	layers - number of stacked hmc_transform layers
-		p - target distribution
+		p - target distribution, log of the pdf
 		L - fixed number of steps for HMC
 		params - stepsize parameters for the sampler network
 
@@ -55,7 +55,7 @@ Output: f - neural network imitating HMC w/ stepsize parameters
 '''
 def hmc_nn(layers, p, L, params):
 	assert layers == params.size()[0]
-	U = lambda x: -torch.log(p(x))
+	U = lambda x: -p(x)
 	def f(inputs, params):
 		layer_in = inputs
 		for i in range(layers):
@@ -67,18 +67,20 @@ def hmc_nn(layers, p, L, params):
 '''
 HMC sampler.
 
-Input:	p - target distribution
+Input:	p - target distribution, log of the pdf
 		L - fixed number of steps
 		eps - fixed stepsize
 		nsamples - number of samples
 		d - dimension of samples
 
 Output: samples - list of the samples from HMC
+		accepted - the acceptance rate during the HMC run
 '''
 def hmc_sampler(p, L, eps, nsamples, d):
-	U = lambda x: -torch.log(p(x))
+	U = lambda x: -p(x)
 	samples = []
 	current = Normal(0, 1).sample(torch.Size([1, d]))
+	accepted = 0
 	for i in tqdm(range(nsamples)):
 		old, new = hmc_transform(U, L, eps, current)
 		old_U = U(old[0])
@@ -87,11 +89,38 @@ def hmc_sampler(p, L, eps, nsamples, d):
 		new_K = torch.sum(new[1]**2)/2
 		prob = float(torch.exp(old_U - new_U + old_K - new_K))
 		if np.random.rand() < prob:
+			accepted += 1
 			current = new[0]
 		else:
 			current = old[0]
 		samples.append(current.numpy())
-	return samples
+	accepted = accepted / nsamples
+	return samples, accepted
+
+'''
+Choose the optimal value of stepsize according to the acceptance rate.
+Best acceptance rate should be around 65% (cite).
+
+Input:	p - target distribution, log of the pdf
+		L - fixed number of steps
+		eps - list of possible values for the stepsize
+		nsamples - number of samples to generate
+		d - dimension of samples
+
+Output:	best_eps - optimal value of the stepsize
+		best_rate - corresponding acceptance rate
+'''
+def choose_best(p, L, eps, nsamples, d):
+	baseline = 0.65
+	best_rate = 0
+	best_eps = -1
+	for eps_val in eps:
+		_, accepted = hmc_sampler(p, L, eps_val, nsamples, d)
+		print("stepsize: {} gives acceptance rate: {}".format(eps_val, accepted))
+		if abs(accepted - baseline) < abs(best_rate - baseline):
+			best_rate = accepted
+			best_eps = eps_val
+	return best_eps, best_rate
 
 if __name__ == '__main__':
 	L = 10

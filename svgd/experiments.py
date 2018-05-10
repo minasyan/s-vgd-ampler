@@ -31,7 +31,7 @@ def SimpleTwoDim(x):
 def generate100Dim(mean, covariance):
     def Complex100Dim(x):
         gauss = multivariate_normal.MultivariateNormal(mean, covariance)
-        return torch.exp(gauss.log_prob(x))
+        return gauss.log_prob(x)
     return Complex100Dim
 
 # print ("The variance is {}".format(np.var(result.numpy().reshape(-1))))
