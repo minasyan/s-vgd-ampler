@@ -9,6 +9,7 @@ from svgd.svgd import RBF_kernel
 from asvgd import asvgd
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
+from hmc import hmc_nn
 
 
 def OneDimNormalMixture2(x):
@@ -29,8 +30,8 @@ def nn(nin, nhidden1, nhidden2, nout, params):
 	# uses sigmoid for now, can be changed to relu.
 	def f(inputs, params):
 		assert nin == inputs.size()[1]
-		a = F.sigmoid(torch.matmul(inputs, params[:nweights1].view(nin, nhidden1)))
-		b = F.sigmoid(torch.matmul(a, params[nweights1:nweights2].view(nhidden1, nhidden2)))
+		a = F.relu(torch.matmul(inputs, params[:nweights1].view(nin, nhidden1)))
+		b = F.relu(torch.matmul(a, params[nweights1:nweights2].view(nhidden1, nhidden2)))
 		c = torch.matmul(b, params[nweights2:nweights3].view(nhidden2, nout))
 		return c
 	return f

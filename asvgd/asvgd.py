@@ -17,6 +17,9 @@ def numpy_p3(x):
 def numpy_p4(x):
     return 4/5 * norm.pdf(x, 0, 1) + 1/5 * norm.pdf(x, 8, 1)
 
+def numpy_p(x):
+    return 1/3 * norm.pdf(x, -2, 1) + 2/3 * norm.pdf(x, 2, 1)
+
 '''
 Amortized SVGD that performs T iterations of SVGD steps on a parameterized
 function (neural network) to update the parameters.
