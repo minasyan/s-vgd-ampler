@@ -20,15 +20,15 @@ def nn(nin, nhidden1, nhidden2, nout, params):
 	# uses sigmoid for now, can be changed to relu.
 	def f(inputs, params):
 		assert nin == inputs.size()[1]
-		a = F.sigmoid(torch.matmul(inputs, params[:nweights1].view(nin, nhidden1)))
-		b = F.sigmoid(torch.matmul(a, params[nweights1:nweights2].view(nhidden1, nhidden2)))
+		a = F.relu(torch.matmul(inputs, params[:nweights1].view(nin, nhidden1)))
+		b = F.relu(torch.matmul(a, params[nweights1:nweights2].view(nhidden1, nhidden2)))
 		c = torch.matmul(b, params[nweights2:nweights3].view(nhidden2, nout))
 		return c
 	return f
 
 if __name__ == '__main__':
 	nin, nhidden1, nhidden2, nout = 1, 5, 5, 1
-	T = 20
+	T = 1000
 	m = 100
 	def q(m):
 		dist = Normal(0, 1)
@@ -37,10 +37,10 @@ if __name__ == '__main__':
 	params = Normal(0, 1).sample(torch.Size([nparams]))
 	f = nn(nin, nhidden1, nhidden2, nout, params)
 
-	layers = 5
-	L = 10
-	params = Normal(0, 0.1).sample(torch.Size([layers]))
-	f = hmc_nn(layers, OneDimNormalMixture, L, params)
+	# layers = 5
+	# L = 10
+	# params = Normal(0, 0.1).sample(torch.Size([layers]))
+	# f = hmc_nn(layers, OneDimNormalMixture, L, params)
 	result_params = asvgd(OneDimNormalMixture, f, q, RBF_kernel, params, T, m)
 	result = f(q(m*m), result_params)
 	g = gaussian_kde(result.numpy().reshape(-1))

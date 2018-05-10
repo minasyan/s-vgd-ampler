@@ -4,8 +4,11 @@ import torch
 import numpy as np
 from torch.autograd import Variable
 from svgd.svgd import grad_log, put_max_first
-from scipy.stats import gaussian_kde
+from scipy.stats import gaussian_kde, norm
 import matplotlib.pyplot as plt
+
+def numpy_p(x):
+    return 1/3 * norm.pdf(x, -2, 1) + 2/3 * norm.pdf(x, 2, 1)
 
 '''
 Amortized SVGD that performs T iterations of SVGD steps on a parameterized
@@ -35,7 +38,9 @@ def asvgd(p, f, q, kern, params, T, m, alpha=0.9, step=1e-1):
 		if t % 50 == 0:
 			g = gaussian_kde(zs.numpy().reshape(-1))
 			xs = np.arange(-20, 20, 0.01)
-			plt.plot(xs, g(xs), 'g')
+			plt.plot(xs, g(xs), 'g', label='particles')
+			plt.plot(xs, numpy_p(xs), 'r', label='target')
+			plt.legend(loc='top right')
 			plt.show()
 		## put the most likely input at the front to lead the direction
 		zs = put_max_first(zs, p)

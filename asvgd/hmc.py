@@ -1,7 +1,11 @@
+import sys
+sys.path.append('../')
 import torch
 import numpy as np
+from svgd.experiments import OneDimNormalMixture, OneDimNormalMixtureFar, OneDimNormalMixtureComplex
 from torch.distributions.normal import Normal
 from torch.autograd import Variable
+from tqdm import tqdm
 
 def grad(F, x):
 	grads = torch.zeros(x.size())
@@ -59,3 +63,42 @@ def hmc_nn(layers, p, L, params):
 			layer_in = new[0]
 		return layer_in
 	return f
+
+'''
+HMC sampler.
+
+Input:	p - target distribution
+		L - fixed number of steps
+		eps - fixed stepsize
+		nsamples - number of samples
+		d - dimension of samples
+
+Output: samples - list of the samples from HMC
+'''
+def hmc_sampler(p, L, eps, nsamples, d):
+	U = lambda x: -torch.log(p(x))
+	samples = []
+	current = Normal(0, 1).sample(torch.Size([1, d]))
+	for i in tqdm(range(nsamples)):
+		old, new = hmc_transform(U, L, eps, current)
+		old_U = U(old[0])
+		new_U = U(new[0])
+		old_K = torch.sum(old[1]**2)/2
+		new_K = torch.sum(new[1]**2)/2
+		prob = float(torch.exp(old_U - new_U + old_K - new_K))
+		if np.random.rand() < prob:
+			current = new[0]
+		else:
+			current = old[0]
+		samples.append(current.numpy())
+	return samples
+
+if __name__ == '__main__':
+	L = 10
+	eps = 0.05
+	nsamples = 10000
+	d = 1
+	p = OneDimNormalMixture
+	samples = hmc_sampler(p, L, eps, nsamples, d)
+	samples = np.array(samples).reshape((nsamples, d))
+	print(np.mean(samples, axis=0))
