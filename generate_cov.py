@@ -61,5 +61,7 @@ plt.show()
 plt.imshow(cov, interpolation=None)
 plt.show()
 
+C = torch.Tensor(C)
+torch.save(C, 'final_correlation_matrix.pt')
 cov = torch.Tensor(cov)
 torch.save(cov, 'final_covariance_matrix.pt')
