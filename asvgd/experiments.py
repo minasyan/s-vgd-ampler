@@ -10,6 +10,16 @@ from asvgd import asvgd
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 
+
+def OneDimNormalMixture2(x):
+    return (1/3) * torch.exp(Normal(2,1).log_prob(x)) + (2/3) * torch.exp(Normal(6,1).log_prob(x))
+
+def OneDimNormalMixture3(x):
+    return (1/3) * torch.exp(Normal(0,1).log_prob(x)) + (2/3) * torch.exp(Normal(8,1).log_prob(x))
+
+def OneDimNormalMixture4(x):
+    return (4/5) * torch.exp(Normal(0,1).log_prob(x)) + (1/5) * torch.exp(Normal(8,1).log_prob(x))
+
 def nn(nin, nhidden1, nhidden2, nout, params):
 	nweights1 = nin * nhidden1
 	nweights2 = nhidden1 * nhidden2 + nweights1
@@ -33,9 +43,10 @@ if __name__ == '__main__':
 		dist = Normal(0, 1)
 		return dist.sample(torch.Size([m, nin]))
 	nparams = nin * nhidden1 + nhidden1 * nhidden2 + nhidden2 * nout
-	params = Normal(0, 1).sample(torch.Size([nparams]))
+	# params = Normal(0, 1).sample(torch.Size([nparams]))
+	params = torch.load('params_third.pt')
 	f = nn(nin, nhidden1, nhidden2, nout, params)
-	result_params = asvgd(OneDimNormalMixture, f, q, RBF_kernel, params, T, m)
+	result_params = asvgd(OneDimNormalMixture4, f, q, RBF_kernel, params, T, m)
 	result = f(q(m*m), result_params)
 	g = gaussian_kde(result.numpy().reshape(-1))
 	xs = np.arange(-20, 20, 0.01)
