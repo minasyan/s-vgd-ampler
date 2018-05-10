@@ -9,6 +9,7 @@ from svgd.svgd import RBF_kernel
 from asvgd import asvgd
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
+from hmc import hmc_nn
 
 def nn(nin, nhidden1, nhidden2, nout, params):
 	nweights1 = nin * nhidden1
@@ -27,7 +28,7 @@ def nn(nin, nhidden1, nhidden2, nout, params):
 
 if __name__ == '__main__':
 	nin, nhidden1, nhidden2, nout = 1, 5, 5, 1
-	T = 1000
+	T = 20
 	m = 100
 	def q(m):
 		dist = Normal(0, 1)
@@ -35,6 +36,11 @@ if __name__ == '__main__':
 	nparams = nin * nhidden1 + nhidden1 * nhidden2 + nhidden2 * nout
 	params = Normal(0, 1).sample(torch.Size([nparams]))
 	f = nn(nin, nhidden1, nhidden2, nout, params)
+
+	layers = 5
+	L = 10
+	params = Normal(0, 0.1).sample(torch.Size([layers]))
+	f = hmc_nn(layers, OneDimNormalMixture, L, params)
 	result_params = asvgd(OneDimNormalMixture, f, q, RBF_kernel, params, T, m)
 	result = f(q(m*m), result_params)
 	g = gaussian_kde(result.numpy().reshape(-1))
