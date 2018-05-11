@@ -55,14 +55,18 @@ def generate100Dim(mean, covariance):
 #plt.show()
 
 if __name__=='__main__':
-    dimension = 1
-    nparticles = 200
-    x = np.random.normal(0, 1, nparticles * dimension).reshape((-1, dimension))
-
-    ## TODO: only for 100DIM example
-    mean = torch.Tensor([2.5]*dimension)
-    covariance = torch.Tensor(datasets.make_spd_matrix(dimension))
-
-    start_time = time.time()
-    result = svgd.svgd(generate100Dim(mean, covariance), svgd.RBF_kernel, x, 100, mean=mean, covariance=covariance)
-    print("--- %s seconds ---" % (time.time() - start_time))
+    T = 1000
+    nparticles = 350
+    x = np.random.normal(0,1, nparticles).reshape((-1,1))
+    results = svgd.svgd(OneDimNormalMixtureComplex, svgd.RBF_kernel, x, T, alpha=0.9, fudge=1e-6, step=1e-1, mean=None, covariance=None)
+    # dimension = 1
+    # nparticles = 200
+    # x = np.random.normal(0, 1, nparticles * dimension).reshape((-1, dimension))
+    #
+    # ## TODO: only for 100DIM example
+    # mean = torch.Tensor([2.5]*dimension)
+    # covariance = torch.Tensor(datasets.make_spd_matrix(dimension))
+    #
+    # start_time = time.time()
+    # result = svgd.svgd(generate100Dim(mean, covariance), svgd.RBF_kernel, x, 100, mean=mean, covariance=covariance)
+    # print("--- %s seconds ---" % (time.time() - start_time))

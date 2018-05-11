@@ -49,17 +49,17 @@ def svgd(p, kern, x, T, alpha=0.9, fudge=1e-6, step=1e-1, mean=None, covariance=
     for i in tqdm(range(T)):
         ### debugging
         if i % 50 == 0 or i == T-1:
-            pass
             # TODO: Change mean and varince here.
             # twoDimPlotter(x, target)
             # bigDimPlotter(x,target)
 
-        #     plt.figure()
-        #     xs = np.arange(-20, 20, 0.01)
-        #     plt.plot(xs, numpy_multi(xs), 'r-')
-        #     g = gaussian_kde(x.numpy().reshape(-1))
-        #     plt.plot(xs, g(xs), 'g')
-        #     plt.savefig('../../../nparticles/{}.png'.format(i))
+            plt.figure()
+            xs = np.arange(-20, 20, 0.01)
+            plt.plot(xs, numpy_p_complex(xs), 'r')
+            g = gaussian_kde(x.numpy().reshape(-1))
+            plt.plot(xs, g(xs), 'g')
+            # plt.show()
+            plt.savefig('../../../nparticles/500_n{}.png'.format(i))
         varx = Variable(x, requires_grad = True)
         grad_logp = grad_log(p, varx)
         kernel, grad_kernel = kern(x)
@@ -127,9 +127,9 @@ def grad_log(p, x):
     n, d = tuple(x.size())
     grad_log = []
     for i in range(len(x)):
-        if float(p(x[i])) < 1e-35:
-            grad_log.append(grad_log[-1])
-            continue
+        # if float(p(x[i])) < 1e-35:
+        #     grad_log.append(grad_log[-1])
+        #     continue
         # print ("p(x) is {}".format(p(x[i])))
         logp = torch.log(p(x[i]))
         # print ("logp us {}".format(logp))

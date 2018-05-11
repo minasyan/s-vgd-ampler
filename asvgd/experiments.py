@@ -1,5 +1,6 @@
 import sys
 sys.path.append('../')
+import time
 import torch
 import torch.nn.functional as F
 from torch.distributions.normal import Normal
@@ -37,30 +38,43 @@ def nn(nin, nhidden1, nhidden2, nout, params):
 	return f
 
 if __name__ == '__main__':
-	nin, nhidden1, nhidden2, nout = 1, 5, 5, 1
-	T = 1000
-	m = 100
-	L = 10
-	d = 100
-	nsamples = 2000
-	def q(m):
-		dist = Normal(0, 1)
-		return dist.sample(torch.Size([m, nin]))
+    nin, nhidden1, nhidden2, nout = 1, 5, 5, 1
+    T = 1000
+    m = 100
+    L = 10
+    d = 100
+    nsamples = 2000
+    def q(m):
+        dist = Normal(0, 0.5)
+        return dist.sample(torch.Size([m, d]))
 	# nparams = nin * nhidden1 + nhidden1 * nhidden2 + nhidden2 * nout
 	# # params = Normal(0, 1).sample(torch.Size([nparams]))
 	# params = torch.load('params_third.pt')
 	# f = nn(nin, nhidden1, nhidden2, nout, params)
+    covariance = torch.load('../covariance_matrix.pt')
+    mean = torch.Tensor(np.arange(0, 1, 0.01))
+    p = generate100Dim(mean, covariance)
+    layers = 5
+    params = Normal(0.002, 0.001).sample(torch.Size([layers]))
+    f = hmc_nn(layers, p, L, params)
+    start_time = time.time()
+    result_params = asvgd(p, f, q, RBF_kernel, params, 20, 100, alpha=0.9, step=1e-2)
+    print("--- Training Neural ASVGD HMC: %s seconds ---" % (time.time() - start_time))
+    print(result_params)
 
-	covariance = torch.load('../covariance_matrix.pt')
-	mean = torch.Tensor(np.arange(0, 1, 0.01))
-	p = generate100Dim(mean, covariance)
-	eps = [0.12, 0.13, 0.135, 0.14, 0.145, 0.15]
-	best_eps, _ = choose_best(p, L, eps, nsamples, d)
-	samples, accepted = hmc_sampler(p, L, best_eps, 10*nsamples, d)
-	print("Best stepsize value {} and its acceptance rate {}".format(best_eps, accepted))
-	samples = np.array(samples).reshape((10*nsamples, d))
-	samples_touse = samples[5*nsamples:, :]
-	print("Mean estimation: ", np.mean(samples_touse, axis=0))
+    nsamples = 10000
+    start_time = time.time()
+    samples = f(q(nsamples), result_params)
+    print("--- Sampling from Neural ASVGD HMC: %s seconds ---" % (time.time() - start_time))
+    torch.save(samples, 'final_asvgd_hmc_sampler_second_run.pt')
+
+	# eps = [0.12, 0.13, 0.135, 0.14, 0.145, 0.15]
+	# best_eps, _ = choose_best(p, L, eps, nsamples, d)
+	# samples, accepted = hmc_sampler(p, L, best_eps, 10*nsamples, d)
+	# print("Best stepsize value {} and its acceptance rate {}".format(best_eps, accepted))
+	# samples = np.array(samples).reshape((10*nsamples, d))
+	# samples_touse = samples[5*nsamples:, :]
+	# print("Mean estimation: ", np.mean(samples_touse, axis=0))
 
 	# result_params = asvgd(OneDimNormalMixture4, f, q, RBF_kernel, params, T, m)
 	# result = f(q(m*m), result_params)

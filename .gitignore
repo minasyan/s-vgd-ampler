@@ -2,3 +2,6 @@
 *.pyc
 asvgd/__pycache__
 asvgd/params*
+asvgd/visualization_hmc.py
+asvgd/final_asvgd_hmc*
+asvgd/hmc_samples*

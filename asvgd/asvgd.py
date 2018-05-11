@@ -43,17 +43,17 @@ def asvgd(p, f, q, kern, params, T, m, alpha=0.9, step=1e-1):
 		# print("iteration: {}".format(t))
 		inputs = q(m)	# m x p
 		zs = f(inputs, params)	# m x d
-		print("mean is: {}".format(torch.mean(zs)))
+		# print("mean is: {}".format(torch.mean(zs)))
 		d = zs.size()[1]
-		if t % 50 == 0 or t == T-1:
-			plt.figure()
-			xs = np.arange(-20, 20, 0.01)
-			plt.plot(xs, numpy_p3(xs), 'r:', label='old target', linewidth=1.25)
-			plt.plot(xs, numpy_p4(xs), 'r-', label='target')
-			g = gaussian_kde(zs.numpy().reshape(-1))
-			plt.plot(xs, g(xs), 'g', label='particles')
-			plt.legend(loc='top right')
-			plt.show()
+		# if t % 5 == 0 or t == T-1:
+			# plt.figure()
+			# xs = np.arange(-20, 20, 0.01)
+			# plt.plot(xs, numpy_p3(xs), 'r:', label='old target', linewidth=1.25)
+			# plt.plot(xs, numpy_p4(xs), 'r-', label='target')
+			# g = gaussian_kde(zs.numpy().reshape(-1))
+			# plt.plot(xs, g(xs), 'g', label='particles')
+			# plt.legend(loc='top right')
+			# plt.show()
 
 		## put the most likely input at the front to lead the direction
 		zs = put_max_first(zs, p)
