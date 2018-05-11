@@ -131,7 +131,7 @@ def grad_log(p, x):
         #     grad_log.append(grad_log[-1])
         #     continue
         # print ("p(x) is {}".format(p(x[i])))
-        logp = torch.log(p(x[i]))
+        logp = p(x[i])
         # print ("logp us {}".format(logp))
         logp.backward()
         # print ("the grad is {}".format(x.grad.data[i]))
