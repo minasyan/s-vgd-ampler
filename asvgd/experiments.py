@@ -40,27 +40,36 @@ if __name__ == '__main__':
 	nin, nhidden1, nhidden2, nout = 1, 5, 5, 1
 	T = 1000
 	m = 100
-	L = 10
+	L = 50
 	d = 100
 	nsamples = 2000
 	def q(m):
 		dist = Normal(0, 1)
-		return dist.sample(torch.Size([m, nin]))
+		return dist.sample(torch.Size([m, d]))
 	# nparams = nin * nhidden1 + nhidden1 * nhidden2 + nhidden2 * nout
 	# # params = Normal(0, 1).sample(torch.Size([nparams]))
 	# params = torch.load('params_third.pt')
 	# f = nn(nin, nhidden1, nhidden2, nout, params)
 
-	covariance = torch.load('../covariance_matrix.pt')
-	mean = torch.Tensor(np.arange(0, 1, 0.01))
+	covariance = torch.load('../final_covariance_matrix.pt')
+	mean = torch.zeros(d)
 	p = generate100Dim(mean, covariance)
-	eps = [0.12, 0.13, 0.135, 0.14, 0.145, 0.15]
+
+	eps = [0.002025]
 	best_eps, _ = choose_best(p, L, eps, nsamples, d)
+	# all_samples = []
 	samples, accepted = hmc_sampler(p, L, best_eps, 10*nsamples, d)
 	print("Best stepsize value {} and its acceptance rate {}".format(best_eps, accepted))
 	samples = np.array(samples).reshape((10*nsamples, d))
-	samples_touse = samples[5*nsamples:, :]
-	print("Mean estimation: ", np.mean(samples_touse, axis=0))
+	touse = int(5*nsamples)
+	samples_touse = samples[touse:, :]
+	# if i == 0:
+	# 	all_samples = samples_touse
+	# else:
+	# 	all_samples = np.vstack((all_samples, samples_touse))
+		# print("Mean estimation: ", np.mean(samples_touse, axis=0))
+	print(samples_touse.shape)
+	np.savetxt("../../data/hmc_samples.csv", samples_touse, delimiter=',')
 
 	# result_params = asvgd(OneDimNormalMixture4, f, q, RBF_kernel, params, T, m)
 	# result = f(q(m*m), result_params)
